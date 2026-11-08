@@ -96,8 +96,11 @@ export const colors = {
   btnSecondaryText: palette.textPrimary,
 
   // States
+  error: palette.error,
   errorBg: palette.errorLight,
+  success: palette.success,
   successBg: palette.successLight,
+  warning: palette.warning,
   warningBg: palette.warningLight,
   overlay: palette.overlay,
 
