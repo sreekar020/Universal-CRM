@@ -13,7 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { router, Link } from 'expo-router';
+import { Link } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,8 +34,7 @@ const DEMO_PASSWORD = 'Demo@1234';
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const setSession = useAppStore((s) => s.setSession);
-  const workspace = useAppStore((s) => s.onboarding.workspace);
+  const loginUser = useAppStore((s) => s.loginUser);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -53,13 +52,8 @@ export default function LoginScreen() {
     setServerError(null);
     try {
       const session = await authService.login(data);
-      setSession(session);
-      // Navigate based on whether workspace has been set up
-      if (workspace) {
-        router.replace('/(crm)/dashboard');
-      } else {
-        router.replace('/(onboarding)/business-preferences');
-      }
+      // loginUser sets authState → 'ready', root layout redirects to dashboard
+      loginUser(session);
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     }
@@ -99,7 +93,7 @@ export default function LoginScreen() {
           </View>
           <View style={styles.workspaceInfo}>
             <Text style={styles.workspaceName}>
-              {workspace?.name ?? 'UrbanNest Realty'}
+              {'UrbanNest Realty'}
             </Text>
             <Text style={styles.workspaceLastLogin}>Last login · Yesterday, 6:12 PM</Text>
           </View>

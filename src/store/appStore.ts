@@ -23,6 +23,7 @@ interface AppState {
 
   // Actions
   setSession: (session: AuthSession) => void;
+  loginUser: (session: AuthSession) => void;
   setOnboardingNiche: (nicheId: BusinessNicheId) => void;
   setWorkspace: (workspace: Workspace) => void;
   completeOnboarding: (workspace: Workspace) => void;
@@ -41,11 +42,20 @@ export const useAppStore = create<AppState>((set) => ({
 
   // ── Actions ────────────────────────────────────────────────
 
+  // setSession — used by Register: marks user as needing onboarding
   setSession: (session: AuthSession) =>
     set({
       session,
       user: session.user,
       authState: 'onboarding',
+    }),
+
+  // loginUser — used by Login: existing user, skip onboarding, go straight to CRM
+  loginUser: (session: AuthSession) =>
+    set({
+      session,
+      user: session.user,
+      authState: 'ready',
     }),
 
   setOnboardingNiche: (nicheId: BusinessNicheId) =>

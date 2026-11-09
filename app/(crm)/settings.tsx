@@ -16,7 +16,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Polyline, Line, Rect } from 'react-native-svg';
 import { colors, textStyles, layout, radius } from '../../src/theme';
-import { useAppStore } from '../../src/store/appStore';
+import { useAppStore, selectUser, selectWorkspace, selectSelectedNiche } from '../../src/store/appStore';
 import TabBar from '../../src/components/ui/TabBar';
 
 function ChevronRightIcon({ color = '#252A26', size = 16 }: { color?: string; size?: number }) {
@@ -125,7 +125,22 @@ const MENU_ITEMS = [
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const logout = useAppStore((s) => s.logout);
+  const user = useAppStore(selectUser);
+  const workspace = useAppStore(selectWorkspace);
+  const niche = useAppStore(selectSelectedNiche);
   const [whatsappEnabled, setWhatsappEnabled] = useState(true);
+
+  const userName = user?.fullName || 'Sreekar Reddy';
+  const userEmail = user?.email || 'sreekar@urbannest.in';
+  const initials = userName
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'SR';
+  const workspaceName = workspace?.name || 'UrbanNest Realty';
+  const nicheName = niche ? niche.replace('-', ' ') : 'Real Estate';
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -140,20 +155,20 @@ export default function SettingsScreen() {
         {/* ── Header ── */}
         <View>
           <Text style={styles.title}>More & Settings</Text>
-          <Text style={styles.subtitle}>UrbanNest Realty</Text>
+          <Text style={styles.subtitle}>{workspaceName}</Text>
         </View>
 
         {/* ── Profile Card ── */}
         <View style={styles.profileCard}>
           <View style={styles.profileAvatar}>
-            <Text style={styles.profileAvatarText}>SR</Text>
+            <Text style={styles.profileAvatarText}>{initials}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.profileName}>Sreekar Reddy</Text>
-            <Text style={styles.profileRole}>Owner · sreekar@urbannest.in</Text>
+            <Text style={styles.profileName}>{userName}</Text>
+            <Text style={styles.profileRole}>Owner · {userEmail}</Text>
           </View>
           <View style={styles.nichePill}>
-            <Text style={styles.nichePillText}>Real Estate</Text>
+            <Text style={[styles.nichePillText, { textTransform: 'capitalize' }]}>{nicheName}</Text>
           </View>
         </View>
 

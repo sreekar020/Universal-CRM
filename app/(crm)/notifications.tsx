@@ -3,7 +3,7 @@
 //  Grouped Today/Yesterday, unread accent border, mark all read
 // ─────────────────────────────────────────────────────────────
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,10 +11,20 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Polyline, Line, Rect } from 'react-native-svg';
 import { colors, textStyles, layout, radius } from '../../src/theme';
 import TabBar from '../../src/components/ui/TabBar';
+
+function ArrowLeftIcon({ color = '#252A26', size = 20 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Line x1="19" y1="12" x2="5" y2="12" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+      <Polyline points="12 19 5 12 12 5" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
 
 const NOTIFICATIONS = {
   TODAY: [
@@ -124,6 +134,13 @@ function NotifIcon({ type }: { type: string }) {
 
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
+  const [todayNotifs, setTodayNotifs] = useState(NOTIFICATIONS.TODAY);
+
+  const unreadCount = todayNotifs.filter((n) => n.unread).length;
+
+  const markAllRead = () => {
+    setTodayNotifs((prev) => prev.map((n) => ({ ...n, unread: false })));
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -137,18 +154,31 @@ export default function NotificationsScreen() {
       >
         {/* ── Header ── */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.title}>Notifications</Text>
-            <Text style={styles.subtitle}>3 unread</Text>
+          <View style={styles.headerTitleGroup}>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+            >
+              <ArrowLeftIcon color={colors.textPrimary} size={20} />
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.title}>Notifications</Text>
+              <Text style={styles.subtitle}>
+                {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+              </Text>
+            </View>
           </View>
-          <TouchableOpacity>
-            <Text style={styles.markAllRead}>Mark all read</Text>
-          </TouchableOpacity>
+          {unreadCount > 0 && (
+            <TouchableOpacity onPress={markAllRead} activeOpacity={0.75}>
+              <Text style={styles.markAllRead}>Mark all read</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* ── Today ── */}
         <Text style={styles.groupLabel}>TODAY</Text>
-        {NOTIFICATIONS.TODAY.map((n) => (
+        {todayNotifs.map((n) => (
           <TouchableOpacity
             key={n.id}
             style={[styles.notifCard, n.unread && styles.notifCardUnread]}
@@ -200,6 +230,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
+  },
+  headerTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.bgSurface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: { fontFamily: 'Manrope_800ExtraBold', fontSize: 30, color: colors.textPrimary, letterSpacing: -0.5 },
   subtitle: { ...textStyles.caption, color: colors.textSecondary, marginTop: 2 },

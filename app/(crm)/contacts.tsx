@@ -15,9 +15,18 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path, Circle, Line } from 'react-native-svg';
+import Svg, { Path, Circle, Line, Polyline } from 'react-native-svg';
 import { colors, textStyles, spacing, layout, radius } from '../../src/theme';
 import TabBar from '../../src/components/ui/TabBar';
+
+function ArrowLeftIcon({ color = '#252A26', size = 20 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Line x1="19" y1="12" x2="5" y2="12" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+      <Polyline points="12 19 5 12 12 5" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
 
 const CONTACTS_DATA = [
   {
@@ -66,14 +75,37 @@ export default function ContactsScreen() {
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
 
+  const filteredSections = React.useMemo(() => {
+    if (!search.trim()) return CONTACTS_DATA;
+    const q = search.toLowerCase();
+    return CONTACTS_DATA.map((section) => ({
+      ...section,
+      data: section.data.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.role.toLowerCase().includes(q) ||
+          c.detail.toLowerCase().includes(q)
+      ),
+    })).filter((section) => section.data.length > 0);
+  }, [search]);
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Header (outside SectionList for sticky effect) */}
       <View style={[styles.headerWrap, { paddingTop: insets.top + 16 }]}>
         <View style={styles.header}>
-          <View>
-            <Text style={styles.title}>Contacts</Text>
-            <Text style={styles.subtitle}>86 people · 4 companies</Text>
+          <View style={styles.headerTitleGroup}>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+            >
+              <ArrowLeftIcon color={colors.textPrimary} size={20} />
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.title}>Contacts</Text>
+              <Text style={styles.subtitle}>86 people · 4 companies</Text>
+            </View>
           </View>
           <TouchableOpacity style={styles.addBtn} activeOpacity={0.85}>
             <PlusIcon />
@@ -93,7 +125,7 @@ export default function ContactsScreen() {
       </View>
 
       <SectionList
-        sections={CONTACTS_DATA}
+        sections={filteredSections}
         keyExtractor={(item) => item.id}
         contentContainerStyle={[styles.list, { paddingBottom: 16 }]}
         showsVerticalScrollIndicator={false}
@@ -106,29 +138,33 @@ export default function ContactsScreen() {
           const isFirst = index === 0;
           const isLast = index === section.data.length - 1;
           return (
-            <TouchableOpacity
+            <View
               style={[
                 styles.contactItem,
                 isFirst && styles.contactItemFirst,
                 isLast && styles.contactItemLast,
                 !isLast && styles.contactItemBorder,
               ]}
-              activeOpacity={0.75}
-              onPress={() => router.push('/(crm)/contact-details' as any)}
             >
-              <View style={[styles.avatar, { backgroundColor: item.avatarBg }]}>
-                <Text style={styles.avatarText}>{item.initials}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.contactName}>{item.name}</Text>
-                <Text style={styles.contactSub}>
-                  {item.role}{item.detail ? ` · ${item.detail}` : ''}
-                </Text>
-              </View>
+              <TouchableOpacity
+                style={styles.contactItemBody}
+                activeOpacity={0.75}
+                onPress={() => router.push('/(crm)/contact-details' as any)}
+              >
+                <View style={[styles.avatar, { backgroundColor: item.avatarBg }]}>
+                  <Text style={styles.avatarText}>{item.initials}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.contactName}>{item.name}</Text>
+                  <Text style={styles.contactSub}>
+                    {item.role}{item.detail ? ` · ${item.detail}` : ''}
+                  </Text>
+                </View>
+              </TouchableOpacity>
               <TouchableOpacity style={styles.phoneBtn} activeOpacity={0.7}>
                 <PhoneIcon size={18} color={colors.textPrimary} />
               </TouchableOpacity>
-            </TouchableOpacity>
+            </View>
           );
         }}
       />
@@ -148,6 +184,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
+  },
+  headerTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.bgSurface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: { fontFamily: 'Manrope_800ExtraBold', fontSize: 30, color: colors.textPrimary, letterSpacing: -0.5 },
   subtitle: { ...textStyles.caption, color: colors.textSecondary, marginTop: 2 },
@@ -196,6 +247,12 @@ const styles = StyleSheet.create({
     borderLeftWidth: 1,
     borderRightWidth: 1,
     borderColor: colors.border,
+  },
+  contactItemBody: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   contactItemFirst: {
     borderTopWidth: 1,
